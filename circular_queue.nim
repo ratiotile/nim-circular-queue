@@ -27,7 +27,7 @@ proc size[s:static int, T](this: CircularQueue[s, T]): int =
     result = s - this.idx_start
     result += this.idx_end
 ]#
-proc size*(this: CircularQueue): int {.inline, nosideEffect.} =
+proc size*(this: CircularQueue): int {.inline, noinit, nosideEffect.} =
   ## Current number of items in the queue
   if this.idx_end >= this.idx_start:
     result = this.idx_end - this.idx_start
@@ -35,7 +35,7 @@ proc size*(this: CircularQueue): int {.inline, nosideEffect.} =
     result = len(this.data) - this.idx_start
     result += this.idx_end
 
-proc len*(this: CircularQueue): int {.inline, nosideEffect.} =
+proc len*(this: CircularQueue): int {.inline, noinit, nosideEffect.} =
   ## Alias for size()
   this.size()
 
@@ -48,35 +48,35 @@ proc shift*(this: var CircularQueue) =
   this.idx_end = this.nextIndex(this.idx_end)
   this.idx_start = this.nextIndex(this.idx_start)
 
-proc capacity*(this: CircularQueue): int {.inline, nosideEffect.} = 
+proc capacity*[s, T](this: CircularQueue[s, T]): int {.inline, noinit, nosideEffect.} = 
   ## The maximum capcity this queue can hold
-  len(this.data) - 1
+  result = s
 
-proc isEmpty*(this: CircularQueue): bool {.inline, nosideEffect.} =
+proc isEmpty*(this: CircularQueue): bool {.inline, noinit, nosideEffect.} =
   ## Efficient way to determine if queue is empty
   this.idx_start == this.idx_end
 
-proc isFull*(this: CircularQueue): bool {.inline, nosideEffect.} = 
+proc isFull*(this: CircularQueue): bool {.inline, noinit, nosideEffect.} = 
   ## Check if the queue is full.
   this.size() >= this.capacity()
 
-proc peek*[s, T](this: CircularQueue[s, T]): T {.inline, nosideEffect.} =
+proc peek*[s, T](this: CircularQueue[s, T]): T {.inline, noinit, nosideEffect.} =
   when not defined(release):
     assert(not this.isEmpty(), "cannot peek on empty queue")
   result = this.data[this.idx_start]
 
-proc peekFirst*[s, T](this: CircularQueue[s, T]): T {.inline, nosideEffect.} =
+proc peekFirst*[s, T](this: CircularQueue[s, T]): T {.inline, noinit, nosideEffect.} =
   ## Alias for peek
   this.peek()
 
-proc wrapIndex*(this: CircularQueue, i: int): int {.inline, nosideEffect.} =
+proc wrapIndex*(this: CircularQueue, i: int): int {.inline, noinit, nosideEffect.} =
   i mod (this.capacity() + 1)
 
-proc nextIndex*(this: CircularQueue, i: int): int {.inline, nosideEffect.} =
+proc nextIndex*(this: CircularQueue, i: int): int {.inline, noinit, nosideEffect.} =
   ## Calculate next wraparound index
   this.wrapIndex(i + 1)
 
-proc pop*[s, T](this: var CircularQueue[s, T]): T {.inline.} =
+proc pop*[s, T](this: var CircularQueue[s, T]): T {.inline, noinit.} =
   ## Remove and return the first item. The data is not cleared until overwritten
   ## by later adds.
   when not defined(release):
@@ -84,7 +84,7 @@ proc pop*[s, T](this: var CircularQueue[s, T]): T {.inline.} =
   result = this.data[this.idx_start]
   this.idx_start = this.nextIndex(this.idx_start)
 
-proc popFirst*[s, T](this: var CircularQueue[s, T]): T {.inline, discardable.} =
+proc popFirst*[s, T](this: var CircularQueue[s, T]): T {.inline, noinit, discardable.} =
   ## Alias for pop
   this.pop()
 
@@ -101,11 +101,11 @@ proc addLast*[s, T](this: var CircularQueue[s, T], item: T) {.inline.} =
   ## Alias for add
   this.add(item)
 
-proc `[]`*[s, T](this: var CircularQueue[s, T], i: int): var T {.inline.} =
+proc `[]`*[s, T](this: var CircularQueue[s, T], i: int): T {.inline, noinit.} =
   ## Get item at index (from front)
   this.data[this.wrapIndex(i + this.idx_start)]
 
-proc `[]`*[s, T](this: var CircularQueue[s, T], i: int, v: T) {.inline.} =
+proc `[]=`*[s, T](this: var CircularQueue[s, T], i: int, v: T) {.inline.} =
   ## set item at index (from front)
   this.data[this.wrapIndex(i + this.idx_start)] = v
 
